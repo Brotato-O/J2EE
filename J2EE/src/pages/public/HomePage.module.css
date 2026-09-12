@@ -1,0 +1,18 @@
+.hero {
+  background: linear-gradient(135deg, #fff1ed, #ffffff);
+  border: 1px solid #ffd8cf;
+  border-radius: 12px;
+  margin-bottom: 32px;
+  padding: 42px 24px;
+  text-align: center;
+}
+
+.title {
+  color: var(--color-text);
+  margin: 0 0 8px;
+}
+
+.subtitle {
+  color: var(--color-muted);
+  margin: 0;
+}

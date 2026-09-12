@@ -1,57 +1,56 @@
 import React from 'react';
 import type { Product } from '../types/Product';
+import { useCart } from '../context/CartContext';
+import { useAuth } from './Auth/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { FiShoppingCart } from 'react-icons/fi';
+import styles from './ProductCard.module.css';
 
 interface ProductCardProps {
   product: Product;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
   const handleAddToCart = () => {
-    alert(`Đã thêm ${product.name} vào giỏ hàng!`);
+    if (!isAuthenticated) {
+      toast.info('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.');
+      navigate('/login');
+      return;
+    }
+
+    addToCart(product);
+    toast.success('Thêm thành công');
   };
 
   return (
-    <div style={{ 
-      border: '1px solid #ddd', 
-      borderRadius: '12px', 
-      padding: '15px', 
-      display: 'flex', 
-      flexDirection: 'column',
-      gap: '10px',
-      backgroundColor: '#fff',
-      boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
-    }}>
-      <img 
-        src={product.imageUrl} 
-        alt={product.name} 
-        style={{ width: '100%', height: '180px', objectFit: 'cover', borderRadius: '8px' }} 
+    <article className={styles.card}>
+      <img
+        className={styles.image}
+        src={product.imageUrl}
+        alt={product.name}
       />
-      <h3 style={{ margin: '10px 0 5px 0', fontSize: '1.2rem' }}>{product.name}</h3>
-      <p style={{ color: '#666', fontSize: '0.9rem', flexGrow: 1 }}>{product.shortDescription}</p>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontWeight: 'bold', color: '#e44d26', fontSize: '1.1rem' }}>
+      <h3 className={styles.name}>{product.name}</h3>
+      <p className={styles.description}>{product.shortDescription}</p>
+      <div className={styles.meta}>
+        <span className={styles.price}>
           {product.price.toLocaleString('vi-VN')} đ
         </span>
-        <span style={{ fontSize: '0.8rem', color: '#888' }}>Kho: {product.inStock}</span>
+        <span className={styles.stock}>Kho: {product.inStock}</span>
       </div>
-      <button 
+      <button
+        className={styles.button}
+        type="button"
         onClick={handleAddToCart}
-        style={{
-          backgroundColor: '#007bff',
-          color: 'white',
-          border: 'none',
-          padding: '10px',
-          borderRadius: '6px',
-          cursor: 'pointer',
-          fontWeight: '500',
-          transition: 'background 0.2s'
-        }}
-        onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#0056b3')}
-        onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#007bff')}
       >
+        <FiShoppingCart aria-hidden="true" />{' '}
         Thêm vào giỏ hàng
       </button>
-    </div>
+    </article>
   );
 };
 
