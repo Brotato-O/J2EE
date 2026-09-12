@@ -1,10 +1,10 @@
 import React from 'react';
+import ProductList from '../../components/ProductList';
 
 const ProductsPage: React.FC = () => {
   return (
     <div>
-      <h2>Our Products</h2>
-      <p>List of products will go here.</p>
+      <ProductList />
     </div>
   );
 };
