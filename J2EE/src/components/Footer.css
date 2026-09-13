@@ -1,0 +1,120 @@
+.footer-container {
+    margin-top: 50px;
+  background: linear-gradient(135deg, #fff1ed, #ffffff);
+      border: 1px solid #ffd8cf;
+    border-radius: 12px;
+  color: #333333;
+  padding: 50px 0 20px;
+  font-family: 'Poppins', sans-serif;
+  width: 100%;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1.5fr;
+  gap: 40px;
+}
+
+/* Cột thương hiệu */
+.footer-logo {
+  height: 40px;
+  margin-bottom: 15px;
+}
+
+.footer-desc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #555555;
+}
+
+/* Các cột liên kết */
+.footer-links h4,
+.footer-newsletter h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 18px;
+}
+
+.footer-links ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-links li {
+  margin-bottom: 10px;
+}
+
+.footer-links a {
+  text-decoration: none;
+  color: #555555;
+  font-size: 14px;
+  transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+  color: #71d3e3;
+}
+
+/* Form đăng ký email */
+.footer-newsletter p {
+  font-size: 14px;
+  color: #555555;
+  margin-bottom: 15px;
+}
+
+.newsletter-form {
+  display: flex;
+  gap: 8px;
+}
+
+.newsletter-form input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #ffffff;
+  border-radius: 20px;
+  outline: none;
+  font-size: 13px;
+}
+
+.newsletter-form button {
+  background-color: #71d3e3;
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.newsletter-form button:hover {
+  background-color: #5bc4d5;
+}
+
+/* Copyright dưới cùng */
+.footer-bottom {
+  max-width: 1200px;
+  margin: 40px auto 0;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  text-align: center;
+  font-size: 13px;
+  color: #777777;
+}
+
+/* Responsive cho màn hình nhỏ */
+@media (max-width: 900px) {
+  .footer-content {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 550px) {
+  .footer-content {
+    grid-template-columns: 1fr;
+  }
+}

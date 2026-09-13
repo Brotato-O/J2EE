@@ -1,6 +1,7 @@
 import React from 'react';
 import ProductList from '../../components/ProductList';
 import styles from './HomePage.module.css';
+import Footer from '../../components/Footer';
 
 const HomePage: React.FC = () => {
   return (
@@ -12,6 +13,7 @@ const HomePage: React.FC = () => {
       <main>
         <ProductList />
       </main>
+      <Footer />
     </div>
   );
 };
