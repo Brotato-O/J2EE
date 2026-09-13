@@ -15,6 +15,7 @@ import CheckoutPage from '../pages/private/CheckoutPage';
 import OrderHistoryPage from '../pages/private/OrderHistoryPage';
 import ProfilePage from '../pages/private/ProfilePage';
 import FavouritePage from '../pages/private/FavouritePage';
+import OrderDetailPage from '../pages/private/OrderDetailPage';
 
 export const router = createBrowserRouter([
   {
@@ -23,7 +24,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: 'products', element: <ProductsPage /> },
-      { path: 'products/:id', element: <ProductDetailPage /> },
+      { path: 'product/:id', element: <ProductDetailPage /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
       {
@@ -32,6 +33,7 @@ export const router = createBrowserRouter([
           { path: 'cart', element: <CartPage /> },
           { path: 'checkout', element: <CheckoutPage /> },
           { path: 'order-history', element: <OrderHistoryPage /> },
+          { path: 'order-history/:id', element: <OrderDetailPage /> },
           { path: 'profile', element: <ProfilePage /> },
           { path: 'favourite', element: <FavouritePage /> },
         ],

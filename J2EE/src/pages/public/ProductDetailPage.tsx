@@ -1,12 +1,31 @@
-import React from 'react';
+
+import styles from './ProductDetailPage.module.css';
+import ProductDetailInfor from './ProductDetailPage/ProductDetailInfor';
+import ProductDetailDescribe from './ProductDetailPage/ProductDetailDescribe';
+import { mockProducts } from '../../data/mockProducts';
 import { useParams } from 'react-router-dom';
 
-const ProductDetailPage: React.FC = () => {
+function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
+
+  const product = mockProducts.find((p) => p.id === id);
+
+  if (!product) {
+    return <div>Không tìm thấy sản phẩm</div>;
+  }
+ 
   return (
-    <div>
-      <h2>Product Detail for ID: {id}</h2>
-      <p>Details of product {id} will go here.</p>
+    <div className={styles.pageContainer}>
+
+      {/* MAIN DETAILS */}
+      <main className={styles.mainContent}>
+        
+        <ProductDetailInfor product={product} />
+        
+
+        <ProductDetailDescribe  product={product}/>
+        
+      </main>
     </div>
   );
 };
