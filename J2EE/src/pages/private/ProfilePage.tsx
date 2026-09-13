@@ -20,6 +20,7 @@ const ProfilePage: React.FC = () => {
             <Link to="/cart">Giỏ hàng</Link>
             <Link to="/checkout">Thanh toán</Link>
             <Link to="/order-history">Lịch sử đơn hàng</Link>
+            <Link to="/favourite">Danh sách yêu thích</Link>
           </div>
         </div>
       ) : (

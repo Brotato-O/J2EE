@@ -14,6 +14,7 @@ import CartPage from '../pages/public/CartPage'; // Bạn có thể để Cart l
 import CheckoutPage from '../pages/private/CheckoutPage';
 import OrderHistoryPage from '../pages/private/OrderHistoryPage';
 import ProfilePage from '../pages/private/ProfilePage';
+import FavouritePage from '../pages/private/FavouritePage';
 
 export const router = createBrowserRouter([
   {
@@ -32,6 +33,7 @@ export const router = createBrowserRouter([
           { path: 'checkout', element: <CheckoutPage /> },
           { path: 'order-history', element: <OrderHistoryPage /> },
           { path: 'profile', element: <ProfilePage /> },
+          { path: 'favourite', element: <FavouritePage /> },
         ],
       },
     ],
