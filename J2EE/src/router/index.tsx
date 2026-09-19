@@ -17,6 +17,8 @@ import ProfilePage from '../pages/private/ProfilePage';
 import FavouritePage from '../pages/private/FavouritePage';
 import OrderDetailPage from '../pages/private/OrderDetailPage';
 
+import { adminRoutes } from "./AdminRoute";
+
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -42,6 +44,13 @@ export const router = createBrowserRouter([
   },
   {
     path: '*',
+    element: <Navigate to="/" replace />,
+  },
+  // ADMIN
+  adminRoutes,
+
+  {
+    path: "*",
     element: <Navigate to="/" replace />,
   },
 ]);
