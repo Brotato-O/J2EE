@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../components/Auth/AuthContext';
 import { mockUsers } from '../../data/mockUsers';
 import { toast } from 'react-toastify';
 import styles from './LoginPage.module.css';
+import axios from 'axios';
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -11,19 +12,47 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const matchedUser = mockUsers.find(
-      (mockUser) => mockUser.username === username && mockUser.password === password,
-    );
 
-    if (matchedUser) {
-      login(matchedUser.token, matchedUser.user);
-      navigate('/products');
-    } else {
-      toast.error('Tên đăng nhập hoặc mật khẩu không đúng.');
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    try {
+      const response = await axios.post('http://localhost:8080/api/v1/auth/login', {
+        email: username,
+        password,
+      });
+
+      const data = response.data;
+
+      // Chuyển dữ liệu backend thành đối tượng User
+      const user = {
+        id: String(data.id),
+        name: data.name,
+        email: data.email,
+      };
+
+      // Lưu token và thông tin người dùng vào AuthContext
+      login(data.token, user);
+
+      toast.success('Đăng nhập thành công!');
+      // navigate('/products');
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (
+          error.response?.status === 401 ||
+          error.response?.status === 400
+        ) {
+          toast.error(error.message);
+        } else {
+          toast.error(error.message);
+        }
+      } else {
+        console.error('Unknown error:', error);
+        toast.error('Đã xảy ra lỗi không xác định.');
+      }
     }
   };
+
 
   return (
     <div className={styles.page}>
