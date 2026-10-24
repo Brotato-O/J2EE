@@ -2,6 +2,7 @@ import React from 'react';
 import ProductList from '../../components/ProductList';
 import styles from './HomePage.module.css';
 import Footer from '../../components/Footer';
+import { mockProducts } from '../../data/mockProducts';
 
 const HomePage: React.FC = () => {
   return (
@@ -11,7 +12,7 @@ const HomePage: React.FC = () => {
         <p className={styles.subtitle}>Khám phá danh sách sản phẩm mới nhất của chúng tôi</p>
       </header>
       <main>
-        <ProductList />
+        <ProductList products={mockProducts}/>
       </main>
       <Footer />
     </div>

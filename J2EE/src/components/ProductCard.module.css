@@ -70,3 +70,57 @@
 .button:hover {
   background: var(--color-primary-dark);
 }
+
+/* Khung bọc ảnh giúp cố định vị trí icon trái tim ở góc ảnh */
+.imageWrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Icon trái tim nổi trên góc phải ảnh với bóng mờ (box-shadow) nhẹ */
+.wishlistBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #ffffff;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #666666;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease, color 0.2s ease;
+  z-index: 2;
+}
+
+.wishlistBtn:hover {
+  transform: scale(1.1);
+  color: #f04d26;
+}
+
+/* Style cho Nút Xem chi tiết */
+.detailButton {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 8px;
+  background-color: #ffffff;
+  color: #333333;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.detailButton:hover {
+  border-color: #f04d26;
+  color: #f04d26;
+}
