@@ -5,6 +5,7 @@ import { mockUsers } from '../../data/mockUsers';
 import { toast } from 'react-toastify';
 import styles from './LoginPage.module.css';
 import axios from 'axios';
+import axiosClient from '../../config/axiosConfig';
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -17,7 +18,7 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post('http://localhost:8080/api/v1/auth/login', {
+      const response = await axiosClient.post('api/v1/auth/login', {
         email: username,
         password,
       });
@@ -33,6 +34,8 @@ const LoginPage: React.FC = () => {
 
       // Lưu token và thông tin người dùng vào AuthContext
       login(data.token, user);
+      navigate("/products");
+      window.location.reload();
 
       toast.success('Đăng nhập thành công!');
       // navigate('/products');
