@@ -1,0 +1,35 @@
+.products-page {
+    padding: 30px 20px;
+}
+
+.products-message {
+    padding: 32px;
+    text-align: center;
+}
+
+.products-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin: 40px 0;
+}
+
+.products-pagination button {
+    padding: 9px 15px;
+    background: white;
+    color: #111827;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+.products-pagination button.active {
+    background: #111827;
+    color: white;
+}
+
+.products-pagination button:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
