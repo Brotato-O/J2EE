@@ -1,44 +1,155 @@
-function OrderSummary(){
-    return (
-        <div className="checkout-card summary-card">
-              <h2 className="card-title">Đơn hàng (1 sản phẩm)</h2>
-              
-              {/* Danh sách item */}
-              <div className="order-item">
-                <div className="item-img-placeholder">
-                  <img src="https://via.placeholder.com/60" alt="Laptop Gaming ASUS" />
-                </div>
-                <div className="item-details">
-                  <span className="item-name">Laptop Gaming ASUS</span>
-                  <span className="item-qty">Số lượng: 1</span>
-                </div>
-                <span className="item-price">25.000.000 đ</span>
-              </div>
 
-              <div className="divider"></div>
+import { useEffect, useState } from "react";
+import { getMyCart } from "../../../api/cartApi";
+import type { CartResponse } from "../../../types/Cart";
 
-              {/* Tính toán tiền */}
-              <div className="summary-row">
-                <span>Tạm tính</span>
-                <span>25.000.000 đ</span>
-              </div>
-              <div className="summary-row">
-                <span>Phí vận chuyển</span>
-                <span className="free-text">Miễn phí</span>
-              </div>
-
-              <div className="divider"></div>
-
-              <div className="summary-row total-row">
-                <span>Tổng cộng</span>
-                <span className="total-price">25.000.000 đ</span>
-              </div>
-
-              <button className="btn-submit-order">
-                Đặt hàng ngay
-              </button>
-            </div>
-    );
+interface OrderSummaryProps {
+  address: string;
+  onPlaceOrder: () => void;
+  isSubmitting: boolean;
 }
 
-export default OrderSummary
+function OrderSummary({
+  address,
+  onPlaceOrder,
+  isSubmitting,
+}: OrderSummaryProps) {
+  const [cart, setCart] = useState<CartResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchCart = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const data = await getMyCart();
+        setCart(data);
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Không thể tải giỏ hàng"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCart();
+  }, []);
+
+  const formatPrice = (price: number) => {
+    return price.toLocaleString("vi-VN") + " đ";
+  };
+
+  if (loading) {
+    return (
+      <div className="checkout-card summary-card">
+        Đang tải thông tin đơn hàng...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="checkout-card summary-card">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  if (!cart || cart.items.length === 0) {
+    return (
+      <div className="checkout-card summary-card">
+        <h2 className="card-title">Đơn hàng</h2>
+        <p>Giỏ hàng của bạn đang trống.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="checkout-card summary-card">
+      <h2 className="card-title">
+        Đơn hàng ({cart.totalQuantity} sản phẩm)
+      </h2>
+
+      {/* Danh sách sản phẩm */}
+      {cart.items.map((item) => (
+        <div className="order-item" key={item.id}>
+          <div className="item-img-placeholder">
+            <img
+              src={item.image || "https://via.placeholder.com/60"}
+              alt={item.productName}
+            />
+          </div>
+
+          <div className="item-details">
+            <span className="item-name">
+              {item.productName}
+            </span>
+
+            <span className="item-qty">
+              Màu: {item.color} | Size: {item.size}
+            </span>
+
+            <span className="item-qty">
+              Số lượng: {item.quantity}
+            </span>
+
+            <span className="item-qty">
+              Đơn giá: {formatPrice(item.unitPrice)}
+            </span>
+          </div>
+
+          <span className="item-price">
+            {formatPrice(item.totalPrice)}
+          </span>
+        </div>
+      ))}
+
+      <div className="divider"></div>
+
+      {/* Chi tiết thanh toán */}
+      <div className="summary-row">
+        <span>Tạm tính</span>
+        <span>{formatPrice(cart.totalPrice)}</span>
+      </div>
+
+      <div className="summary-row">
+        <span>Phí vận chuyển</span>
+        <span className="free-text">Miễn phí</span>
+      </div>
+
+      <div className="divider"></div>
+
+      <div className="summary-row total-row">
+        <span>Tổng cộng</span>
+        <span className="total-price">
+          {formatPrice(cart.totalPrice)}
+        </span>
+      </div>
+
+      <button
+        className="btn-submit-order"
+        onClick={onPlaceOrder}
+        disabled={
+          !address.trim() ||
+          isSubmitting ||
+          !cart?.items.length
+        }
+      >
+        {isSubmitting ? "Đang đặt hàng..." : "Đặt hàng ngay"}
+      </button>
+
+      {!address.trim() && (
+        <p className="error-message">
+          Vui lòng nhập địa chỉ giao hàng.
+        </p>
+      )}
+    </div>
+  );
+}
+
+export default OrderSummary;
