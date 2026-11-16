@@ -51,13 +51,20 @@ export const CartProvider = ({ children }: CartProviderProps) => {
 
   // Chuẩn hóa dữ liệu nhận từ backend
   const updateCartState = (response: CartResponse) => {
-    const items = (response.items ?? []).map((item) => ({
-      ...item,
-      quantity: Number(item.quantity ?? 0),
-      unitPrice: Number(item.unitPrice ?? 0),
-      totalPrice: Number(item.totalPrice ?? 0),
-      availableStock: Number(item.availableStock ?? 0),
-    }));
+    console.log('Cart response:', response);
+
+    const items = (response.items ?? []).map((item) => {
+      console.log('Thông tin từng sản phẩm:', item);
+      console.log('Đường dẫn ảnh:', item.image);
+
+      return {
+        ...item,
+        quantity: Number(item.quantity ?? 0),
+        unitPrice: Number(item.unitPrice ?? 0),
+        totalPrice: Number(item.totalPrice ?? 0),
+        availableStock: Number(item.availableStock ?? 0),
+      };
+    });
 
     setCart(items);
   };

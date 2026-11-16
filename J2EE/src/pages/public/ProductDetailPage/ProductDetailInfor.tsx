@@ -38,16 +38,7 @@ function ProductDetailInfor({ product }: ProductDetailPageProps) {
     const [selectedColor, setSelectedColor] = useState<string>('');
     const [selectedSize, setSelectedSize] = useState<string>('');
 
-    const productImages = [
-        product.imageUrl,
-        'https://picsum.photos/400/300?random=10',
-        'https://picsum.photos/400/300?random=11',
-        'https://picsum.photos/400/300?random=12',
-    ];
 
-    const [selectedImg, setSelectedImg] = useState<string>(
-        productImages[0]
-    );
 
     // Danh sách biến thể
     const variants = product.variants ?? [];
@@ -193,7 +184,7 @@ function ProductDetailInfor({ product }: ProductDetailPageProps) {
 
                 <div className={styles.mainImageWrapper}>
                     <img
-                        src={selectedImg}
+                        src={product.imageUrl}
                         alt={product.name}
                         className={styles.mainImage}
                     />
@@ -202,11 +193,7 @@ function ProductDetailInfor({ product }: ProductDetailPageProps) {
                         type="button"
                         className={styles.wishlistBtn}
                         onClick={handleToggleWishlist}
-                        title={
-                            isWishlisted
-                                ? 'Xóa khỏi yêu thích'
-                                : 'Thêm vào yêu thích'
-                        }
+                        title={isWishlisted ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích'}
                     >
                         {isWishlisted
                             ? <FaHeart color="#f04d26" />
@@ -215,20 +202,6 @@ function ProductDetailInfor({ product }: ProductDetailPageProps) {
                     </button>
                 </div>
 
-                <div className={styles.thumbList}>
-                    {productImages.map((img, index) => (
-                        <img
-                            key={index}
-                            src={img}
-                            alt={`thumb-${index}`}
-                            className={`
-                                ${styles.thumbItem}
-                                ${selectedImg === img ? styles.activeThumb : ''}
-                            `}
-                            onClick={() => setSelectedImg(img)}
-                        />
-                    ))}
-                </div>
             </div>
 
             {/* CỘT PHẢI: THÔNG TIN SẢN PHẨM */}

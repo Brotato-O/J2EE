@@ -61,9 +61,12 @@ const CartPage: React.FC = () => {
 
               <div>
                 <img
-                  src={item.image}
+                  src={item.image || (item as any).imageUrl}
                   alt={item.productName}
                   width="100"
+                  onError={(e) => {
+                    console.error('Không tải được ảnh:', e.currentTarget.src);
+                  }}
                 />
 
                 <h3>{item.productName}</h3>
