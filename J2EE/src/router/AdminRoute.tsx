@@ -5,6 +5,9 @@ import ProductList from "../pages/admin/products/ProductList";
 import AddProduct from "../pages/admin/products/AddProduct";
 import EditProduct from "../pages/admin/products/EditProduct";
 import UserList from "../pages/admin/users/UserList";
+import OrderList from "../pages/admin/orders/OrderList";
+import ColorList from "../pages/admin/colors/ColorList";
+import SizeList from "../pages/admin/sizes/SizeList";
 
 import AdminLogin from "../pages/admin/auth/AdminLogin";
 import AdminProtectedRoute from "../components/Auth/AdminProtectedRoute";
@@ -44,6 +47,18 @@ export const adminRoutes = {
                         {
                             path: "users",
                             element: <UserList />,
+                        },
+                        {
+                            path: "orders",
+                            element: <OrderList />,
+                        },
+                        {
+                            path: "colors",
+                            element: <ColorList />,
+                        },
+                        {
+                            path: "sizes",
+                            element: <SizeList />,
                         },
                     ],
                 },
