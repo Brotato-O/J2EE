@@ -16,6 +16,10 @@ export default function AdminSidebar() {
                     📦 Quản lý sản phẩm
                 </NavLink>
 
+                <NavLink to="/admin/categories">
+                    📂 Quản lý danh mục
+                </NavLink>
+
                 <NavLink to="/admin/orders">
                     🛒 Quản lý đơn hàng
                 </NavLink>
