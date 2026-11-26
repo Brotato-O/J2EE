@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 interface ProductVariant {
-    id: number;
+    id: number | null;
     colorId: number;
     colorName: string;
     sizeId: number;
@@ -10,6 +10,15 @@ interface ProductVariant {
     price: number | null;
     stockQuantity: number;
     sku: string | null;
+}
+
+interface VariantRequest {
+    id: number | null;
+    colorId: number;
+    sizeId: number;
+    price: number;
+    stockQuantity: number;
+    sku: string;
 }
 
 interface Product {
@@ -52,7 +61,7 @@ export default function EditProduct() {
     const [stock, setStock] = useState("");
     const [description, setDescription] = useState("");
     const [image, setImage] = useState("");
-
+    const [variants, setVariants] = useState<ProductVariant[]>([]);
     // ==============================
     // ID LIÊN KẾT
     // ==============================
@@ -82,6 +91,7 @@ export default function EditProduct() {
             try {
                 setLoading(true);
 
+<<<<<<< HEAD
                 const token =
                     localStorage.getItem("adminToken");
 
@@ -96,12 +106,27 @@ export default function EditProduct() {
 
                 if (token) {
                     headers.Authorization = `${tokenType} ${token}`;
+=======
+                const token = localStorage.getItem("adminToken");
+                const tokenType = localStorage.getItem("adminTokenType") || "Bearer";
+
+                if (!token) {
+                    throw new Error("Bạn chưa đăng nhập admin hoặc token đã hết hạn.");
+>>>>>>> d8593f618069b4861c43c17747dfb752c93884bc
                 }
 
                 const response = await fetch(
                     `http://localhost:8080/api/v1/products/${id}`,
                     {
+<<<<<<< HEAD
                         headers,
+=======
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `${tokenType} ${token}`,
+                        },
+>>>>>>> d8593f618069b4861c43c17747dfb752c93884bc
                     }
                 );
 
@@ -145,7 +170,12 @@ export default function EditProduct() {
                 setBrandName(product.brandName || "");
                 setCategoryName(product.categoryName || "");
                 setSupplierName(product.supplierName || "");
-
+                setVariants(
+                    (product.variants || []).map((variant) => ({
+                        ...variant,
+                        price: variant.price ?? product.price
+                    }))
+                );
             } catch (error) {
                 console.error(error);
 
@@ -259,10 +289,21 @@ export default function EditProduct() {
                         description: description.trim(),
                         image: image.trim(),
 
-                        // QUAN TRỌNG
-                        brandId: brandId,
-                        categoryId: categoryId,
-                        supplierId: supplierId,
+                        brandId,
+                        categoryId,
+                        supplierId,
+
+                        variants: variants.map((variant) => ({
+                            id: variant.id,
+                            colorId: variant.colorId,
+                            sizeId: variant.sizeId,
+
+                            price: variant.price ?? Number(price),
+
+                            stockQuantity: variant.stockQuantity,
+
+                            sku: variant.sku?.trim() || ""
+                        }))
                     }),
                 }
             );
@@ -338,7 +379,49 @@ export default function EditProduct() {
             setSaving(false);
         }
     };
+    // Thêm biến thể mới
+    const handleAddVariant = () => {
+        setVariants((prev) => [
+            ...prev,
+            {
+                id: null,
+                colorId: 0,
+                colorName: "",
+                sizeId: 0,
+                sizeName: "",
+                price: Number(price) || 0,
+                stockQuantity: 0,
+                sku: ""
+            }
+        ]);
+    };
 
+    // Cập nhật một biến thể
+    const handleVariantChange = (
+        index: number,
+        field: keyof ProductVariant,
+        value: string | number
+    ) => {
+        setVariants((prev) =>
+            prev.map((variant, i) =>
+                i === index
+                    ? { ...variant, [field]: value }
+                    : variant
+            )
+        );
+    };
+
+    // Xóa biến thể
+    const handleRemoveVariant = (index: number) => {
+        if (variants.length <= 1) {
+            alert("Sản phẩm phải có ít nhất một biến thể");
+            return;
+        }
+
+        setVariants((prev) =>
+            prev.filter((_, i) => i !== index)
+        );
+    };
     // ==============================
     // LOADING
     // ==============================
@@ -492,6 +575,138 @@ export default function EditProduct() {
                             value={supplierName}
                             disabled
                         />
+                    </div>
+                    {/* QUẢN LÝ BIẾN THỂ */}
+                    <div className="variant-section">
+
+                        <div className="variant-header">
+                            <div>
+                                <h3>Danh sách biến thể</h3>
+                                <p>Quản lý màu sắc, kích thước, giá và tồn kho</p>
+                            </div>
+
+                            <button
+                                type="button"
+                                className="btn-add-variant"
+                                onClick={handleAddVariant}
+                                disabled={saving}
+                            >
+                                + Thêm biến thể
+                            </button>
+                        </div>
+
+                        {variants.map((variant, index) => (
+                            <div className="variant-card" key={variant.id ?? `new-${index}`}>
+
+                                <div className="variant-card-header">
+                                    <strong>
+                                        Biến thể #{index + 1}
+                                        {variant.id !== null && ` (ID: ${variant.id})`}
+                                    </strong>
+
+                                    <button
+                                        type="button"
+                                        className="btn-remove-variant"
+                                        onClick={() => handleRemoveVariant(index)}
+                                        disabled={saving || variants.length <= 1}
+                                    >
+                                        Xóa
+                                    </button>
+                                </div>
+
+                                <div className="variant-grid">
+
+                                    {/* COLOR ID */}
+                                    <div className="form-group">
+                                        <label>Mã màu (Color ID)</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={variant.colorId || ""}
+                                            onChange={(e) =>
+                                                handleVariantChange(
+                                                    index,
+                                                    "colorId",
+                                                    Number(e.target.value)
+                                                )
+                                            }
+                                            disabled={saving}
+                                        />
+                                        {variant.colorName && (
+                                            <small>Hiện tại: {variant.colorName}</small>
+                                        )}
+                                    </div>
+
+                                    {/* SIZE ID */}
+                                    <div className="form-group">
+                                        <label>Mã kích thước (Size ID)</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={variant.sizeId || ""}
+                                            onChange={(e) =>
+                                                handleVariantChange(
+                                                    index,
+                                                    "sizeId",
+                                                    Number(e.target.value)
+                                                )
+                                            }
+                                            disabled={saving}
+                                        />
+                                        {variant.sizeName && (
+                                            <small>Hiện tại: {variant.sizeName}</small>
+                                        )}
+                                    </div>
+
+                                    {/* GIÁ BIẾN THỂ */}
+                                    <div className="form-group">
+                                        <label>Giá biến thể</label>
+                                        <input
+                                            type="text"
+                                            value={`${Number(price).toLocaleString("vi-VN")} đ`}
+                                            disabled
+                                        />
+                                        <small>Giá được lấy từ giá sản phẩm</small>
+                                    </div>
+
+                                    {/* STOCK */}
+                                    <div className="form-group">
+                                        <label>Số lượng tồn kho</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={variant.stockQuantity}
+                                            onChange={(e) =>
+                                                handleVariantChange(
+                                                    index,
+                                                    "stockQuantity",
+                                                    Number(e.target.value)
+                                                )
+                                            }
+                                            disabled={saving}
+                                        />
+                                    </div>
+
+                                    {/* SKU */}
+                                    <div className="form-group variant-sku">
+                                        <label>Mã SKU</label>
+                                        <input
+                                            type="text"
+                                            value={variant.sku || ""}
+                                            onChange={(e) =>
+                                                handleVariantChange(
+                                                    index,
+                                                    "sku",
+                                                    e.target.value
+                                                )
+                                            }
+                                            disabled={saving}
+                                        />
+                                    </div>
+
+                                </div>
+                            </div>
+                        ))}
                     </div>
 
                     {/* BUTTON */}

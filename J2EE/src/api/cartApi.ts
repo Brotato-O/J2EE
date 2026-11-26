@@ -3,7 +3,7 @@ import type {
     AddToCartRequest,
 } from "../types/Cart";
 
-const API_URL = "http://localhost:8080/api/cart";
+const API_URL = "http://localhost:8080/api/v1/carts";
 
 const getAuthHeaders = () => {
     const token = localStorage.getItem('token');

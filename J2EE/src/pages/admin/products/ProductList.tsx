@@ -86,6 +86,7 @@ export default function ProductList() {
                 size
             );
 
+<<<<<<< HEAD
             const token =
                 localStorage.getItem("adminToken");
 
@@ -106,13 +107,29 @@ export default function ProductList() {
                 `http://localhost:8080/api/v1/products?page=${page}&size=${size}&sort=id,desc`,
                 {
                     headers,
+=======
+            const token = localStorage.getItem("adminToken");
+            const tokenType = localStorage.getItem("adminTokenType") || "Bearer";
+
+            if (!token) {
+                throw new Error("Không tìm thấy adminToken. Vui lòng đăng nhập lại.");
+            }
+
+            const response = await fetch(
+                `http://localhost:8080/api/v1/products?page=${page}&size=${size}`,
+                {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `${tokenType} ${token}`,
+                    },
+>>>>>>> d8593f618069b4861c43c17747dfb752c93884bc
                 }
             );
 
             if (!response.ok) {
-                throw new Error(
-                    `Không thể lấy danh sách sản phẩm. HTTP ${response.status}`
-                );
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
 
             const result: ProductApiResponse =
