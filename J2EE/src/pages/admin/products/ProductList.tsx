@@ -86,14 +86,27 @@ export default function ProductList() {
                 size
             );
 
+            const token = localStorage.getItem("adminToken");
+            const tokenType = localStorage.getItem("adminTokenType") || "Bearer";
+
+            if (!token) {
+                throw new Error("Không tìm thấy adminToken. Vui lòng đăng nhập lại.");
+            }
+
             const response = await fetch(
-                `http://localhost:8080/api/v1/products?page=${page}&size=${size}`
+                `http://localhost:8080/api/v1/products?page=${page}&size=${size}`,
+                {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `${tokenType} ${token}`,
+                    },
+                }
             );
 
             if (!response.ok) {
-                throw new Error(
-                    `Không thể lấy danh sách sản phẩm. HTTP ${response.status}`
-                );
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
 
             const result: ProductApiResponse =
