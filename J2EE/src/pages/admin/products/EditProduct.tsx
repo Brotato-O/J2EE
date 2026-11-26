@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { generateSku } from "../../../utils/skuHelper";
 
 interface ProductVariant {
     id: number | null;
@@ -74,6 +75,9 @@ export default function EditProduct() {
     const [categoryName, setCategoryName] = useState("");
     const [supplierName, setSupplierName] = useState("");
 
+    const [colors, setColors] = useState<{ id: number; name: string }[]>([]);
+    const [sizes, setSizes] = useState<{ id: number; name: string }[]>([]);
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
@@ -91,42 +95,25 @@ export default function EditProduct() {
             try {
                 setLoading(true);
 
-<<<<<<< HEAD
-                const token =
-                    localStorage.getItem("adminToken");
 
-                const tokenType =
-                    localStorage.getItem(
-                        "adminTokenType"
-                    ) || "Bearer";
-
-                const headers: HeadersInit = {
-                    "Content-Type": "application/json",
-                };
-
-                if (token) {
-                    headers.Authorization = `${tokenType} ${token}`;
-=======
                 const token = localStorage.getItem("adminToken");
                 const tokenType = localStorage.getItem("adminTokenType") || "Bearer";
 
                 if (!token) {
                     throw new Error("Bạn chưa đăng nhập admin hoặc token đã hết hạn.");
->>>>>>> d8593f618069b4861c43c17747dfb752c93884bc
+
                 }
 
                 const response = await fetch(
                     `http://localhost:8080/api/v1/products/${id}`,
                     {
-<<<<<<< HEAD
-                        headers,
-=======
+
                         method: "GET",
                         headers: {
                             "Content-Type": "application/json",
                             Authorization: `${tokenType} ${token}`,
                         },
->>>>>>> d8593f618069b4861c43c17747dfb752c93884bc
+
                     }
                 );
 
@@ -176,6 +163,24 @@ export default function EditProduct() {
                         price: variant.price ?? product.price
                     }))
                 );
+
+                // Tải danh sách màu sắc và kích thước để ánh xạ tên và tự động sinh SKU
+                const [colorRes, sizeRes] = await Promise.all([
+                    fetch("http://localhost:8080/api/v1/colors?page=0&size=100", {
+                        headers: { "Content-Type": "application/json", Authorization: `${tokenType} ${token}` },
+                    }),
+                    fetch("http://localhost:8080/api/v1/sizes?page=0&size=100", {
+                        headers: { "Content-Type": "application/json", Authorization: `${tokenType} ${token}` },
+                    }),
+                ]);
+                if (colorRes.ok) {
+                    const cJson = await colorRes.json();
+                    setColors(cJson.data?.content || []);
+                }
+                if (sizeRes.ok) {
+                    const sJson = await sizeRes.json();
+                    setSizes(sJson.data?.content || []);
+                }
             } catch (error) {
                 console.error(error);
 
@@ -402,25 +407,91 @@ export default function EditProduct() {
         field: keyof ProductVariant,
         value: string | number
     ) => {
-        setVariants((prev) =>
-            prev.map((variant, i) =>
-                i === index
-                    ? { ...variant, [field]: value }
-                    : variant
-            )
-        );
+        setVariants((prev) => {
+            const next = prev.map((variant, i) => {
+                if (i !== index) return variant;
+
+                const updated = { ...variant, [field]: value };
+
+                // Cập nhật tên tương ứng và tự sinh SKU khi đổi colorId hoặc sizeId
+                if (field === "colorId") {
+                    const c = colors.find((item) => item.id === Number(value));
+                    if (c) updated.colorName = c.name;
+                }
+                if (field === "sizeId") {
+                    const s = sizes.find((item) => item.id === Number(value));
+                    if (s) updated.sizeName = s.name;
+                }
+
+                // Tự động sinh mã SKU theo format: TEN_SP - TEN_MAU - TEN_SIZE
+                if (field === "colorId" || field === "sizeId") {
+                    const cName = updated.colorName || colors.find((c) => c.id === updated.colorId)?.name || "";
+                    const sName = updated.sizeName || sizes.find((s) => s.id === updated.sizeId)?.name || "";
+                    if (cName && sName) {
+                        updated.sku = generateSku(name, cName, sName, id);
+                    }
+                }
+
+                return updated;
+            });
+
+            // Tự động tính lại tổng tồn kho sản phẩm khi cập nhật tồn kho biến thể
+            if (field === "stockQuantity") {
+                const totalStock = next.reduce(
+                    (sum, v) => sum + (Number(v.stockQuantity) || 0),
+                    0
+                );
+                setStock(totalStock.toString());
+            }
+
+            return next;
+        });
     };
 
-    // Xóa biến thể
+    // Xóa biến thể (Soft Delete / Ngưng bán: Đặt tồn kho = 0)
     const handleRemoveVariant = (index: number) => {
-        if (variants.length <= 1) {
-            alert("Sản phẩm phải có ít nhất một biến thể");
+        const target = variants[index];
+
+        // Nếu là biến thể mới thêm (chưa lưu vào DB), có thể xóa hẳn khỏi UI
+        if (!target.id) {
+            setVariants((prev) => {
+                const next = prev.filter((_, i) => i !== index);
+                const totalStock = next.reduce(
+                    (sum, v) => sum + (Number(v.stockQuantity) || 0),
+                    0
+                );
+                setStock(totalStock.toString());
+                return next;
+            });
             return;
         }
 
-        setVariants((prev) =>
-            prev.filter((_, i) => i !== index)
+        // Nếu là biến thể đã có trong DB, đặt tồn kho về 0 và gắn nhãn ngưng bán
+        const confirmNgungBan = window.confirm(
+            `Bạn có muốn ngưng kinh doanh biến thể #${index + 1}? Biến thể này sẽ được đặt số lượng về 0 (hết hàng) để không thể mua nữa.`
         );
+        if (!confirmNgungBan) return;
+
+        setVariants((prev) => {
+            const next = prev.map((variant, i) => {
+                if (i === index) {
+                    const cleanSku = (variant.sku || "").replace(/\s*\[Ngưng bán\]/g, "");
+                    return {
+                        ...variant,
+                        stockQuantity: 0,
+                        sku: `${cleanSku} [Ngưng bán]`,
+                    };
+                }
+                return variant;
+            });
+
+            const totalStock = next.reduce(
+                (sum, v) => sum + (Number(v.stockQuantity) || 0),
+                0
+            );
+            setStock(totalStock.toString());
+            return next;
+        });
     };
     // ==============================
     // LOADING
@@ -595,22 +666,31 @@ export default function EditProduct() {
                             </button>
                         </div>
 
-                        {variants.map((variant, index) => (
-                            <div className="variant-card" key={variant.id ?? `new-${index}`}>
+                        {variants.map((variant, index) => {
+                            const isDiscontinued = variant.stockQuantity === 0 && Boolean(variant.sku?.includes("[Ngưng bán]"));
+
+                            return (
+                            <div
+                                className="variant-card"
+                                key={variant.id ?? `new-${index}`}
+                                style={isDiscontinued ? { opacity: 0.6, border: "1px dashed #ef4444", backgroundColor: "#fef2f2" } : {}}
+                            >
 
                                 <div className="variant-card-header">
                                     <strong>
                                         Biến thể #{index + 1}
                                         {variant.id !== null && ` (ID: ${variant.id})`}
+                                        {isDiscontinued && <span style={{ color: "#dc2626", marginLeft: "8px", fontWeight: "bold" }}>[ĐÃ NGƯNG BÁN / HẾT HÀNG]</span>}
                                     </strong>
 
                                     <button
                                         type="button"
                                         className="btn-remove-variant"
                                         onClick={() => handleRemoveVariant(index)}
-                                        disabled={saving || variants.length <= 1}
+                                        disabled={saving}
+                                        title={variant.id ? "Đặt số lượng = 0 để ngưng bán biến thể này" : "Xóa biến thể"}
                                     >
-                                        Xóa
+                                        {variant.id ? (isDiscontinued ? "Đã ngưng bán" : "Ngưng bán / Xóa") : "Xóa"}
                                     </button>
                                 </div>
 
@@ -689,7 +769,7 @@ export default function EditProduct() {
 
                                     {/* SKU */}
                                     <div className="form-group variant-sku">
-                                        <label>Mã SKU</label>
+                                        <label>Mã SKU (Tự động sinh theo Tên - Màu - Size)</label>
                                         <input
                                             type="text"
                                             value={variant.sku || ""}
@@ -700,13 +780,15 @@ export default function EditProduct() {
                                                     e.target.value
                                                 )
                                             }
+                                            placeholder="Tự động sinh khi chọn màu và kích thước"
                                             disabled={saving}
                                         />
                                     </div>
 
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
                     {/* BUTTON */}

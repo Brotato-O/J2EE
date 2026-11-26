@@ -5,6 +5,7 @@ import {
     type FormEvent,
 } from "react";
 import { useNavigate } from "react-router-dom";
+import { generateSku } from "../../../utils/skuHelper";
 
 const API_URL = "http://localhost:8080/api/v1";
 
@@ -371,9 +372,12 @@ function AddProduct() {
             return;
         }
 
-        setVariants((prev) =>
-            prev.filter((_, i) => i !== index)
-        );
+        setVariants((prev) => {
+            const next = prev.filter((_, i) => i !== index);
+            const totalStock = next.reduce((sum, v) => sum + (Number(v.stockQuantity) || 0), 0);
+            setStock(totalStock.toString());
+            return next;
+        });
     };
 
     const updateVariant = (
@@ -381,16 +385,38 @@ function AddProduct() {
         field: keyof Variant,
         value: string
     ) => {
-        setVariants((prev) =>
-            prev.map((variant, i) =>
-                i === index
-                    ? {
-                        ...variant,
-                        [field]: value,
+        setVariants((prev) => {
+            const next = prev.map((variant, i) => {
+                if (i !== index) return variant;
+
+                const updated = {
+                    ...variant,
+                    [field]: value,
+                };
+
+                // Tự động sinh SKU khi chọn màu hoặc kích thước
+                if (field === "colorId" || field === "sizeId") {
+                    const cId = field === "colorId" ? value : variant.colorId;
+                    const sId = field === "sizeId" ? value : variant.sizeId;
+                    const colorObj = colors.find((c) => String(c.id) === String(cId));
+                    const sizeObj = sizes.find((s) => String(s.id) === String(sId));
+
+                    if (colorObj && sizeObj) {
+                        updated.sku = generateSku(name, colorObj.name, sizeObj.name);
                     }
-                    : variant
-            )
-        );
+                }
+
+                return updated;
+            });
+
+            // Tự động đồng bộ tổng tồn kho sản phẩm khi sửa stockQuantity của biến thể
+            if (field === "stockQuantity") {
+                const totalStock = next.reduce((sum, v) => sum + (Number(v.stockQuantity) || 0), 0);
+                setStock(totalStock.toString());
+            }
+
+            return next;
+        });
     };
 
     // =================================================
@@ -441,6 +467,17 @@ function AddProduct() {
         if (variants.length === 0) {
             alert(
                 "Sản phẩm phải có ít nhất một biến thể"
+            );
+            return false;
+        }
+
+        const totalVariantStock = variants.reduce(
+            (sum, v) => sum + (Number(v.stockQuantity) || 0),
+            0
+        );
+        if (Number(stock) !== totalVariantStock) {
+            alert(
+                `Số lượng tồn kho sản phẩm (${stock}) không khớp với tổng số lượng các biến thể (${totalVariantStock}). Vui lòng kiểm tra lại!`
             );
             return false;
         }
@@ -906,7 +943,7 @@ function AddProduct() {
                                     styles.label
                                 }
                             >
-                                Tồn kho *
+                                Tồn kho (Tự động tính từ biến thể) *
                             </label>
 
                             <input
@@ -915,19 +952,13 @@ function AddProduct() {
                                 value={
                                     stock
                                 }
-                                onChange={(
-                                    e
-                                ) =>
-                                    setStock(
-                                        e
-                                            .target
-                                            .value
-                                    )
-                                }
+                                readOnly
                                 placeholder="0"
-                                style={
-                                    styles.input
-                                }
+                                style={{
+                                    ...styles.input,
+                                    backgroundColor: "#f5f5f5",
+                                    cursor: "not-allowed",
+                                }}
                             />
                         </div>
 
@@ -1448,7 +1479,7 @@ function AddProduct() {
                                                 styles.label
                                             }
                                         >
-                                            SKU
+                                            SKU (Tự động sinh theo Tên - Màu - Size)
                                         </label>
 
                                         <input
@@ -1467,7 +1498,7 @@ function AddProduct() {
                                                         .value
                                                 )
                                             }
-                                            placeholder="Ví dụ: CAP-BLACK-XL"
+                                            placeholder="Tự động tạo khi chọn màu và kích thước (VD: AO-POLO-DEN-XL)"
                                             style={
                                                 styles.input
                                             }
