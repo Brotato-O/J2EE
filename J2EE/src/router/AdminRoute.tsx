@@ -7,6 +7,7 @@ import EditProduct from "../pages/admin/products/EditProduct";
 import UserList from "../pages/admin/users/UserList";
 import OrderList from "../pages/admin/orders/OrderList";
 import CategoryList from "../pages/admin/categories/CategoryList";
+import BrandList from "../pages/admin/brands/BrandList";
 import SupplierList from "../pages/admin/suppliers/SupplierList";
 import ColorList from "../pages/admin/colors/ColorList";
 import SizeList from "../pages/admin/sizes/SizeList";
@@ -49,6 +50,10 @@ export const adminRoutes = {
                         {
                             path: "categories",
                             element: <CategoryList />,
+                        },
+                        {
+                            path: "brands",
+                            element: <BrandList />,
                         },
                         {
                             path: "suppliers",

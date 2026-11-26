@@ -20,6 +20,10 @@ export default function AdminSidebar() {
                     📂 Quản lý danh mục
                 </NavLink>
 
+                <NavLink to="/admin/brands">
+                    🏷️ Quản lý thương hiệu
+                </NavLink>
+
                 <NavLink to="/admin/suppliers">
                     🏢 Quản lý nhà cung cấp
                 </NavLink>
