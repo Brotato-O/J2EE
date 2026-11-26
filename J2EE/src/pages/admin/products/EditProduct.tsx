@@ -82,8 +82,27 @@ export default function EditProduct() {
             try {
                 setLoading(true);
 
+                const token =
+                    localStorage.getItem("adminToken");
+
+                const tokenType =
+                    localStorage.getItem(
+                        "adminTokenType"
+                    ) || "Bearer";
+
+                const headers: HeadersInit = {
+                    "Content-Type": "application/json",
+                };
+
+                if (token) {
+                    headers.Authorization = `${tokenType} ${token}`;
+                }
+
                 const response = await fetch(
-                    `http://localhost:8080/api/v1/products/${id}`
+                    `http://localhost:8080/api/v1/products/${id}`,
+                    {
+                        headers,
+                    }
                 );
 
                 if (!response.ok) {

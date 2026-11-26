@@ -86,8 +86,27 @@ export default function ProductList() {
                 size
             );
 
+            const token =
+                localStorage.getItem("adminToken");
+
+            const tokenType =
+                localStorage.getItem(
+                    "adminTokenType"
+                ) || "Bearer";
+
+            const headers: HeadersInit = {
+                "Content-Type": "application/json",
+            };
+
+            if (token) {
+                headers.Authorization = `${tokenType} ${token}`;
+            }
+
             const response = await fetch(
-                `http://localhost:8080/api/v1/products?page=${page}&size=${size}`
+                `http://localhost:8080/api/v1/products?page=${page}&size=${size}&sort=id,desc`,
+                {
+                    headers,
+                }
             );
 
             if (!response.ok) {
