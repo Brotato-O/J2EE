@@ -122,6 +122,32 @@ export default function OrderList() {
     const [newStatus, setNewStatus] = useState("");
     const [updateLoading, setUpdateLoading] = useState(false);
 
+    // Vận đơn GHN
+    const [shipmentMap, setShipmentMap] = useState<Record<number, string>>({});
+    const [actionLoading, setActionLoading] = useState<Record<number, boolean>>({});
+
+    const fetchShipments = async (orderList: Order[]) => {
+        const map: Record<number, string> = {};
+        await Promise.all(
+            orderList.map(async (o) => {
+                try {
+                    const res = await fetch(`http://localhost:8080/api/v1/fulfillments/orders/${o.orderId}/shipment`, {
+                        headers: getAuthHeaders(),
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data?.trackingCode) {
+                            map[o.orderId] = data.trackingCode;
+                        }
+                    }
+                } catch {
+                    // bỏ qua nếu đơn chưa có vận đơn
+                }
+            })
+        );
+        setShipmentMap((prev) => ({ ...prev, ...map }));
+    };
+
     // ========================
     // LẤY DANH SÁCH ĐƠN HÀNG
     // getAllOrders → trả PageResponse trực tiếp (không wrap ApiResponse)
@@ -142,11 +168,14 @@ export default function OrderList() {
             }
 
             const result: PageResponse = await response.json();
+            const list = result.content || [];
 
-            setOrders(result.content || []);
+            setOrders(list);
             setPage(result.page_no);           // 0-based từ backend
             setTotalPages(result.total_pages);
             setTotalElements(result.total_elements);
+
+            fetchShipments(list);
         } catch (err) {
             setError(
                 err instanceof Error
@@ -224,6 +253,82 @@ export default function OrderList() {
             );
         } finally {
             setUpdateLoading(false);
+        }
+    };
+
+    // ========================
+    // TẠO VẬN ĐƠN GHN
+    // ========================
+    const handleCreateShipment = async (orderId: number) => {
+        if (!window.confirm(`Xác nhận tạo vận đơn và đẩy đơn hàng #${orderId} sang Giao Hàng Nhanh (GHN)?`)) {
+            return;
+        }
+
+        try {
+            setActionLoading((prev) => ({ ...prev, [orderId]: true }));
+            const res = await fetch(`http://localhost:8080/api/v1/fulfillments/orders/${orderId}/shipment`, {
+                method: "POST",
+                headers: getAuthHeaders(),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data?.message || "Tạo vận đơn thất bại");
+            }
+
+            alert(`🎉 Đã tạo vận đơn GHN thành công!\nMã vận đơn: ${data.trackingCode}\nĐơn hàng đã chuyển sang trạng thái 'Đang giao'.`);
+            fetchOrders(page, filterStatus);
+            if (selectedOrder && selectedOrder.orderId === orderId) {
+                setSelectedOrder(null);
+            }
+        } catch (err) {
+            alert(err instanceof Error ? err.message : "Tạo vận đơn thất bại");
+        } finally {
+            setActionLoading((prev) => ({ ...prev, [orderId]: false }));
+        }
+    };
+
+    // ========================
+    // GIẢ LẬP WEBHOOK GHN GIAO THÀNH CÔNG
+    // ========================
+    const handleSimulateWebhook = async (trackingCode: string, orderId: number) => {
+        if (!window.confirm(`Xác nhận giả lập Shipper GHN quét mã '${trackingCode}' giao hàng thành công?`)) {
+            return;
+        }
+
+        try {
+            setActionLoading((prev) => ({ ...prev, [orderId]: true }));
+            const now = new Date();
+            const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
+
+            const res = await fetch(`http://localhost:8080/api/v1/fulfillments/webhooks/ghn`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    OrderCode: trackingCode,
+                    Type: "switch_status",
+                    Status: "delivered",
+                    Time: timeStr,
+                    Reason: "Shipper đã giao thành công và thu tiền",
+                }),
+            });
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => null);
+                throw new Error(errData?.message || "Gọi Webhook thất bại");
+            }
+
+            alert(`✅ Webhook kích hoạt thành công!\nShipper GHN đã cập nhật trạng thái đơn thành 'Đã giao hàng'.`);
+            fetchOrders(page, filterStatus);
+            if (selectedOrder && selectedOrder.orderId === orderId) {
+                setSelectedOrder(null);
+            }
+        } catch (err) {
+            alert(err instanceof Error ? err.message : "Kích hoạt Webhook thất bại");
+        } finally {
+            setActionLoading((prev) => ({ ...prev, [orderId]: false }));
         }
     };
 
@@ -308,13 +413,14 @@ export default function OrderList() {
                             <th>Địa chỉ</th>
                             <th>Tổng tiền</th>
                             <th>Trạng thái</th>
+                            <th>Vận đơn GHN</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
                         {orders.length === 0 ? (
                             <tr>
-                                <td colSpan={7} style={{ textAlign: "center", padding: "30px" }}>
+                                <td colSpan={8} style={{ textAlign: "center", padding: "30px" }}>
                                     Không có đơn hàng nào
                                 </td>
                             </tr>
@@ -346,6 +452,65 @@ export default function OrderList() {
                                             }}>
                                                 {order.status}
                                             </span>
+                                        </td>
+                                        <td style={{ whiteSpace: "nowrap" }}>
+                                            {shipmentMap[order.orderId] ? (
+                                                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                                    <span style={{
+                                                        display: "inline-block",
+                                                        padding: "3px 8px",
+                                                        borderRadius: "4px",
+                                                        fontSize: "12px",
+                                                        fontWeight: 700,
+                                                        background: "#fff7ed",
+                                                        color: "#c2410c",
+                                                        border: "1px solid #fed7aa"
+                                                    }}>
+                                                        📦 {shipmentMap[order.orderId]}
+                                                    </span>
+                                                    {(order.status === "Đang giao" || order.status === "SHIPPING") && (
+                                                        <button
+                                                            style={{
+                                                                background: "#10b981",
+                                                                color: "#fff",
+                                                                border: "none",
+                                                                borderRadius: "4px",
+                                                                padding: "3px 8px",
+                                                                fontSize: "11px",
+                                                                fontWeight: 600,
+                                                                cursor: "pointer",
+                                                            }}
+                                                            disabled={actionLoading[order.orderId]}
+                                                            onClick={() => handleSimulateWebhook(shipmentMap[order.orderId], order.orderId)}
+                                                            title="Giả lập Shipper quét mã giao hàng thành công"
+                                                        >
+                                                            {actionLoading[order.orderId] ? "..." : "⚡ Giao thành công"}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ) : (order.status === "Đã xác nhận" || order.status === "CONFIRMED" || order.status === "Đang đóng gói" || order.status === "PACKING") ? (
+                                                <button
+                                                    style={{
+                                                        background: "#ea580c",
+                                                        color: "#fff",
+                                                        border: "none",
+                                                        borderRadius: "4px",
+                                                        padding: "5px 10px",
+                                                        fontSize: "12px",
+                                                        fontWeight: 600,
+                                                        cursor: "pointer",
+                                                        display: "inline-flex",
+                                                        alignItems: "center",
+                                                        gap: "4px"
+                                                    }}
+                                                    disabled={actionLoading[order.orderId]}
+                                                    onClick={() => handleCreateShipment(order.orderId)}
+                                                >
+                                                    {actionLoading[order.orderId] ? "Đang tạo..." : "🚚 Đẩy sang GHN"}
+                                                </button>
+                                            ) : (
+                                                <span style={{ color: "#9ca3af", fontSize: "12px" }}>—</span>
+                                            )}
                                         </td>
                                         <td style={{ whiteSpace: "nowrap" }}>
                                             <button
@@ -398,6 +563,23 @@ export default function OrderList() {
                             <p style={{ margin: "6px 0" }}><strong>Địa chỉ:</strong> {selectedOrder.address}</p>
                             <p style={{ margin: "6px 0" }}><strong>Trạng thái:</strong> {selectedOrder.status}</p>
                             <p style={{ margin: "6px 0" }}><strong>Tổng tiền:</strong> {formatPrice(selectedOrder.totalPrice)}</p>
+                            <p style={{ margin: "6px 0" }}>
+                                <strong>Vận đơn GHN:</strong>{" "}
+                                {shipmentMap[selectedOrder.orderId] ? (
+                                    <span style={{
+                                        color: "#c2410c",
+                                        fontWeight: 700,
+                                        background: "#fff7ed",
+                                        padding: "3px 8px",
+                                        borderRadius: "4px",
+                                        border: "1px solid #fed7aa"
+                                    }}>
+                                        📦 {shipmentMap[selectedOrder.orderId]}
+                                    </span>
+                                ) : (
+                                    <span style={{ color: "#9ca3af" }}>Chưa tạo vận đơn</span>
+                                )}
+                            </p>
                         </div>
 
                         <h3 style={{ marginBottom: "10px", fontSize: "15px" }}>Sản phẩm trong đơn</h3>
@@ -436,7 +618,45 @@ export default function OrderList() {
                             </table>
                         </div>
 
-                        <div className="admin-modal-footer">
+                        <div className="admin-modal-footer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div>
+                                {!shipmentMap[selectedOrder.orderId] && (selectedOrder.status === "Đã xác nhận" || selectedOrder.status === "CONFIRMED" || selectedOrder.status === "Đang đóng gói" || selectedOrder.status === "PACKING") && (
+                                    <button
+                                        style={{
+                                            background: "#ea580c",
+                                            color: "#fff",
+                                            border: "none",
+                                            borderRadius: "6px",
+                                            padding: "8px 14px",
+                                            fontSize: "13px",
+                                            fontWeight: 600,
+                                            cursor: "pointer",
+                                        }}
+                                        disabled={actionLoading[selectedOrder.orderId]}
+                                        onClick={() => handleCreateShipment(selectedOrder.orderId)}
+                                    >
+                                        {actionLoading[selectedOrder.orderId] ? "Đang tạo..." : "🚚 Đẩy sang GHN ngay"}
+                                    </button>
+                                )}
+                                {shipmentMap[selectedOrder.orderId] && (selectedOrder.status === "Đang giao" || selectedOrder.status === "SHIPPING") && (
+                                    <button
+                                        style={{
+                                            background: "#10b981",
+                                            color: "#fff",
+                                            border: "none",
+                                            borderRadius: "6px",
+                                            padding: "8px 14px",
+                                            fontSize: "13px",
+                                            fontWeight: 600,
+                                            cursor: "pointer",
+                                        }}
+                                        disabled={actionLoading[selectedOrder.orderId]}
+                                        onClick={() => handleSimulateWebhook(shipmentMap[selectedOrder.orderId], selectedOrder.orderId)}
+                                    >
+                                        {actionLoading[selectedOrder.orderId] ? "Đang xử lý..." : "⚡ Giả lập GHN giao thành công"}
+                                    </button>
+                                )}
+                            </div>
                             <button className="btn-view" onClick={() => setSelectedOrder(null)}>Đóng</button>
                         </div>
                     </div>
