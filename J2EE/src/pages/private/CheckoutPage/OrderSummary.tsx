@@ -5,12 +5,14 @@ import type { CartResponse } from "../../../types/Cart";
 
 interface OrderSummaryProps {
   address: string;
+  isAddressValid?: boolean;
   onPlaceOrder: () => void;
   isSubmitting: boolean;
 }
 
 function OrderSummary({
   address,
+  isAddressValid,
   onPlaceOrder,
   isSubmitting,
 }: OrderSummaryProps) {
@@ -135,7 +137,7 @@ function OrderSummary({
         className="btn-submit-order"
         onClick={onPlaceOrder}
         disabled={
-          !address.trim() ||
+          (isAddressValid !== undefined ? !isAddressValid : !address.trim()) ||
           isSubmitting ||
           !cart?.items.length
         }
@@ -143,9 +145,9 @@ function OrderSummary({
         {isSubmitting ? "Đang đặt hàng..." : "Đặt hàng ngay"}
       </button>
 
-      {!address.trim() && (
+      {(isAddressValid !== undefined ? !isAddressValid : !address.trim()) && (
         <p className="error-message">
-          Vui lòng nhập địa chỉ giao hàng.
+          Vui lòng nhập đầy đủ địa chỉ giao hàng.
         </p>
       )}
     </div>

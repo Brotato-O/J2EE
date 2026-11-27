@@ -11,6 +11,10 @@ const getAuthHeaders = () => {
 
 export interface OrderRequest {
     address: string;
+    recipientProvince: string;
+    recipientDistrict: string;
+    recipientWard: string;
+    paymentMethod?: "COD" | "VIETQR" | "VNPAY" | "MOMO";
 }
 
 export interface OrderItem {
