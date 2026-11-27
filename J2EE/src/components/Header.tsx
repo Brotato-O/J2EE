@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { FiChevronDown, FiLogOut, FiSearch, FiShoppingCart, FiUser } from 'react-icons/fi';
+import { FiChevronDown, FiHeart, FiLogOut, FiSearch, FiShoppingCart, FiUser } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from './Auth/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useFavourite } from '../context/FavouriteContext';
 import styles from './Header.module.css';
 
 const Header = () => {
@@ -11,6 +12,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
   const { totalItems } = useCart();
+  const { totalFavourites } = useFavourite();
   const navigate = useNavigate();
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
@@ -49,6 +51,10 @@ const Header = () => {
           <Link className={styles.productsLink} to="/products">Sản phẩm</Link>
           {isAuthenticated ? (
             <>
+              <Link className={styles.cartLink} to="/favourite" aria-label={`Danh sách yêu thích, ${totalFavourites} sản phẩm`}>
+                <FiHeart />
+                {totalFavourites > 0 && <span className={styles.badge}>{totalFavourites}</span>}
+              </Link>
               <Link className={styles.cartLink} to="/cart" aria-label={`Giỏ hàng, ${totalItems} sản phẩm`}>
                 <FiShoppingCart />
                 {totalItems > 0 && <span className={styles.badge}>{totalItems}</span>}
@@ -68,6 +74,7 @@ const Header = () => {
                 {isMenuOpen && (
                   <div className={styles.dropdown} role="menu">
                     <Link to="/profile" role="menuitem" onClick={() => setIsMenuOpen(false)}>Hồ sơ cá nhân</Link>
+                    <Link to="/favourite" role="menuitem" onClick={() => setIsMenuOpen(false)}>Danh sách yêu thích</Link>
                     <button type="button" role="menuitem" onClick={handleLogout}>
                       <FiLogOut />
                       Đăng xuất

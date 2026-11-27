@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import type { Product } from '../types/Product';
 import { useCart } from '../context/CartContext';
+import { useFavourite } from '../context/FavouriteContext';
 import { useAuth } from './Auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -15,10 +16,12 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
+  const { isFavourite, toggleFavourite } = useFavourite();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const isWishlisted = isFavourite(product.id);
+  const [togglingWishlist, setTogglingWishlist] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
 
   const isOutOfStock = product.inStock <= 0;
@@ -56,24 +59,36 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   };
 
   // YÊU THÍCH
-  const handleToggleWishlist = () => {
-    if (!isAuthenticated) {
-      toast.info('Vui lòng đăng nhập để sử dụng danh sách yêu thích.');
-      navigate('/login');
-      return;
-    }
+    const handleToggleWishlist = async () => {
+      if (!isAuthenticated) {
+        toast.info('Vui lòng đăng nhập để sử dụng danh sách yêu thích.');
+        navigate('/login');
+        return;
+      }
 
-    setIsWishlisted((previous) => {
-      const next = !previous;
+        if (togglingWishlist) {
+          return;
+        }
 
-      toast.success(
-        next
-          ? 'Đã thêm vào danh sách yêu thích'
-          : 'Đã xóa khỏi danh sách yêu thích'
+        try {
+          setTogglingWishlist(true);
+          const added = await toggleFavourite(product.id);
+
+          toast.success(
+        added
+              ? 'Đã thêm vào danh sách yêu thích'
+              : 'Đã xóa khỏi danh sách yêu thích'
+          );
+    } catch (error) {
+      console.error('Lỗi cập nhật yêu thích:', error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Không thể cập nhật danh sách yêu thích.'
       );
-
-      return next;
-    });
+    } finally {
+      setTogglingWishlist(false);
+    }
   };
 
   return (
@@ -93,6 +108,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           type="button"
           className={styles.wishlistBtn}
           onClick={handleToggleWishlist}
+          disabled={togglingWishlist}
           title={
             isWishlisted
               ? 'Xóa khỏi yêu thích'
