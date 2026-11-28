@@ -14,7 +14,7 @@ function OrderProducts({ order }: Props) {
       <h2 className="card-title">Sản phẩm đã đặt</h2>
 
       <div className="products-list">
-        {order.items.map((item) => (
+        {(order.items || []).map((item) => (
           <div className="product-row" key={item.orderDetailId}>
             <div className="product-thumb">
               <span>{item.productName.charAt(0)}</span>
