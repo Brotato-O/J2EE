@@ -65,7 +65,7 @@ export const CheckoutPage: React.FC = () => {
       alert("Đặt hàng thành công!");
 
       // Chuyển đến trang chi tiết đơn hàng
-      navigate(`/orders/my/${order.orderId}`, {
+      navigate(`/order-history/${order.orderId}`, {
         state: { order },
       });
 
