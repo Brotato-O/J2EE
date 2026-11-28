@@ -11,6 +11,7 @@ import BrandList from "../pages/admin/brands/BrandList";
 import SupplierList from "../pages/admin/suppliers/SupplierList";
 import ColorList from "../pages/admin/colors/ColorList";
 import SizeList from "../pages/admin/sizes/SizeList";
+import InventoryList from "../pages/admin/inventory/InventoryList";
 
 import AdminLogin from "../pages/admin/auth/AdminLogin";
 import AdminProtectedRoute from "../components/Auth/AdminProtectedRoute";
@@ -46,6 +47,10 @@ export const adminRoutes = {
                         {
                             path: "products/:id/edit",
                             element: <EditProduct />,
+                        },
+                        {
+                            path: "inventory",
+                            element: <InventoryList />,
                         },
                         {
                             path: "categories",
